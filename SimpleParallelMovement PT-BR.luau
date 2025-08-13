@@ -32,7 +32,7 @@ RayParameters.FilterDescendantsInstances = {}
 	// Se você preferir um movimento mais "springy", você pode utilizar o ```:SmoothDamp``` do TweenService ao inves de Lerp.
 ]]
 local function DelayedCFrame(CurrentCFrame: CFrame, GoalCFrame: CFrame, DeltaTime: number): CFrame
-	return CurrentCFrame:Lerp(GoalCFrame, math.clamp(DeltaTime, 0, 1))
+	return CurrentCFrame:Lerp(GoalCFrame, math.clamp(1 - math.pow(.5, DeltaTime), 0, 1))
 end
 
 --[[
