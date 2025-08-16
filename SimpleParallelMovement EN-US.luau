@@ -1,3 +1,4 @@
+
 --!strict
 --!optimize 2
 
@@ -12,12 +13,12 @@
 
 local RunService: RunService = game:GetService('RunService')
 
-local Actor: Actor = script.Parent
+local Actor: Actor = script.Parent :: Actor
 
-local AddedModels: {Model} = {}
-local ModelsTarget: {[Model]: CFrame} = {}
+local AddedBaseParts: {BasePart} = {}
+local BasePartsTarget: {[BasePart]: CFrame} = {}
 
-local BulkMovementModels: {Model} = {}
+local BulkMovementTarget: {BasePart} = {}
 local BulkMovementCFrames: {CFrame} = {}
 
 local RayParameters: RaycastParams = RaycastParams.new()
@@ -26,7 +27,7 @@ RayParameters.FilterType = Enum.RaycastFilterType.Exclude
 RayParameters.FilterDescendantsInstances = {}
 
 --[[
-	// The "DelayedCFrame" is the trick to make the movement of the models smoother,
+	// The "DelayedCFrame" is the trick to make the movement of the BaseParts smoother,
 	// otherwise the movement will look choppy.
 	//
 	// If you prefer a more "springy" movement, you can use ```:SmoothDamp``` from TweenService instead of Lerp.
@@ -41,32 +42,32 @@ end
 	// Maybe yours will need to run on the server, but preferably do it on the client.
 ]]
 local function RaycastToBottom(RayCFrame: CFrame): CFrame
-	local RaycastResult: RaycastResult = workspace:Raycast(RayCFrame.Position, Vector3.new(0, -100, 0), RayParameters)
+	local RaycastResult: RaycastResult? = workspace:Raycast(RayCFrame.Position, Vector3.new(0, -100, 0), RayParameters)
 	if not RaycastResult then return RayCFrame end
 	return CFrame.new(RaycastResult.Position) * RayCFrame.Rotation
 end
 
-Actor:BindToMessageParallel('UpdateModelCFrame', function(Model: Model, ModelCFrame: CFrame): ()
-	if not table.find(AddedModels, Model) then return end
-	ModelsTarget[Model] = ModelCFrame
+Actor:BindToMessageParallel('UpdateBasePartCFrame', function(BasePart: BasePart, BasePartCFrame: CFrame): ()
+	if not table.find(AddedBaseParts, BasePart) then return end
+	BasePartsTarget[BasePart] = BasePartCFrame
 end)
 
-Actor:BindToMessageParallel('AddModel', function(Model: Model): ()
-	if table.find(AddedModels, Model) then return end
-	table.insert(AddedModels, Model)
+Actor:BindToMessageParallel('AddBasePart', function(BasePart: BasePart): ()
+	if table.find(AddedBaseParts, BasePart) then return end
+	table.insert(AddedBaseParts, BasePart)
 end)
 
-Actor:BindToMessageParallel('RemoveModel', function(Model: Model): ()
-	local Index: number? = table.find(AddedModels, Model)
+Actor:BindToMessageParallel('RemoveBasePart', function(BasePart: BasePart): ()
+	local Index: number? = table.find(AddedBaseParts, BasePart)
 	if not Index then return end
-	table.remove(AddedModels, Index)
+	table.remove(AddedBaseParts, Index)
 end)
 
 RunService.Stepped:Connect(function(DeltaTime: number): ()
-	for Model, TargetCFrame in ModelsTarget do
-		local DelayedCFrame: CFrame = DelayedCFrame(Model:GetPivot(), TargetCFrame, DeltaTime)
+	for BasePart, TargetCFrame in BasePartsTarget do
+		local DelayedCFrame: CFrame = DelayedCFrame(BasePart:GetPivot(), TargetCFrame, DeltaTime)
 		local GroundCFrame: CFrame = RaycastToBottom(DelayedCFrame)
-		table.insert(BulkMovementModels, Model)
+		table.insert(BulkMovementTarget, BasePart)
 		table.insert(BulkMovementCFrames, GroundCFrame)
 	end
 end)
@@ -74,18 +75,17 @@ end)
 task.synchronize()
 
 --[[
-	// This part of the code is for moving the models.
+	// This part of the code is for moving the BaseParts.
 	// It needs to be inside "task.synchronize" to exit parallelism,
-	// since moving the models has to be done sequentially.
+	// since moving the BaseParts has to be done sequentially.
 ]]
-
 RunService.Stepped:Connect(function(): ()
 	workspace:BulkMoveTo(
-		BulkMovementModels,
+		BulkMovementTarget,
 		BulkMovementCFrames,
 		Enum.BulkMoveMode.FireCFrameChanged --[[ Use CFrameChanged to discard unnecessary updates in the properties. ]] 
 	)
-	BulkMovementModels = {}
+	BulkMovementTarget = {}
 	BulkMovementCFrames = {}
 end)
 
