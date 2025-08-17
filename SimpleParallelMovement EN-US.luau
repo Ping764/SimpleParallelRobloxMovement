@@ -63,7 +63,7 @@ Actor:BindToMessageParallel('RemoveBasePart', function(BasePart: BasePart): ()
 	table.remove(AddedBaseParts, Index)
 end)
 
-RunService.Stepped:Connect(function(DeltaTime: number): ()
+RunService.Stepped:Connect(function(_, DeltaTime: number): ()
 	for BasePart, TargetCFrame in BasePartsTarget do
 		local DelayedCFrame: CFrame = DelayedCFrame(BasePart:GetPivot(), TargetCFrame, DeltaTime)
 		local GroundCFrame: CFrame = RaycastToBottom(DelayedCFrame)
