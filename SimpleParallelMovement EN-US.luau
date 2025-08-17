@@ -61,6 +61,7 @@ Actor:BindToMessageParallel('RemoveBasePart', function(BasePart: BasePart): ()
 	local Index: number? = table.find(AddedBaseParts, BasePart)
 	if not Index then return end
 	table.remove(AddedBaseParts, Index)
+	BasePartsTarget[BasePart] = nil
 end)
 
 RunService.Stepped:Connect(function(_, DeltaTime: number): ()
