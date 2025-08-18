@@ -66,7 +66,7 @@ end)
 
 RunService.Stepped:Connect(function(_, DeltaTime: number): ()
 	for BasePart, TargetCFrame in BasePartsTarget do
-		local DelayedCFrame: CFrame = DelayedCFrame(BasePart:GetPivot(), TargetCFrame, DeltaTime)
+		local DelayedCFrame: CFrame = DelayedCFrame(BasePart.Position, TargetCFrame, DeltaTime)
 		local GroundCFrame: CFrame = RaycastToBottom(DelayedCFrame)
 		table.insert(BulkMovementTarget, BasePart)
 		table.insert(BulkMovementCFrames, GroundCFrame)
